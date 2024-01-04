@@ -1,3 +1,7 @@
+# Integrantes
+Ágata Clícia Santos Brazão
+Matteo Freitas Reis
+Ricardo Nogueira Miranda Filho
 # Repositorio Base
 # Trabalho Prático 1 de Bancos de Dados I 
 
