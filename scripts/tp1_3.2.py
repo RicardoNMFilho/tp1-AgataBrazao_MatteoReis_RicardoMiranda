@@ -17,6 +17,19 @@ try:
     cur = conn.cursor()
 
 except (Exception, psycopg2.DatabaseError) as error:
+    print(error)
+    conn.close()
+
+def sql_execute(command, params):
+    try:
+        cur.execute(command, params)
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+
+def sql_commit():
+    try:
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
         print(error)
 
 """
@@ -78,41 +91,41 @@ while(EOF != True):
     
     if(match):
         if(match.group(1) == "ASIN"):
-            conn.commit()
+            sql_commit()
             asin = match.group(2)
-            cur.execute("""
+            sql_execute("""
             INSERT INTO Products(ASIN) VALUES (%s)
             """, [asin])
 
         elif(match.group(1) == "title"):
             # apenas adiciona na base de dados, visto que title aparece apenas na Tabela Product
-            cur.execute("""
+            sql_execute("""
             UPDATE Products SET title = %s WHERE ASIN = %s
             """, [match.group(2), asin])
 
         elif(match.group(1) == "group"):
             # apenas adiciona na base de dados, visto que aparece apenas na Tabela Product
-            cur.execute("""
+            sql_execute("""
             UPDATE Products SET group_type = %s WHERE ASIN = %s
             """, [match.group(2), asin])
         
         elif(match.group(1) == "salesrank"):
             # apenas adiciona na base de dados, visto que aparece apenas na Tabela Product
-            cur.execute("""
+            sql_execute("""
             UPDATE Products SET salesrank = %s WHERE ASIN = %s
             """, [match.group(2), asin])
 
         elif(match.group(1) == "similar"):
             similarProducts = extract_asins(match.group(2))
             for similarProduct in similarProducts:
-                cur.execute("""
+                sql_execute("""
                 INSERT INTO SimilarProducts(ProductASIN, similarASIN) VALUES (%s, %s) 
                 """, [asin, similarProduct])
 
         elif(match.group(1) == "categories"):
             for x in range(int(match.group(2))):
-                category = file.readline()
-                cur.execute("""
+                category = file.readline().replace("\n", "")
+                sql_execute("""
                 INSERT INTO ProductCategories(ProductASIN, category) VALUES (%s, %s) 
                 """, [asin, category])
 
@@ -128,11 +141,12 @@ while(EOF != True):
                 votes = int(partes[6])
                 helpful = int(partes[8])
 
-                cur.execute("""
+                sql_execute("""
                 INSERT INTO Reviews(ProductASIN, review_date, customer_id, rating, votes, helpful)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 """, [asin, data, cutomer, rating, votes, helpful])
 
                 line = file.readline()
             
-conn.commit()
+sql_commit()
+conn.close()
